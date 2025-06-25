@@ -1,0 +1,355 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document Analyzer</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f5f5f5;
+            min-height: 100vh;
+        }
+
+        .container {
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+        }
+
+        .tabs {
+            display: flex;
+            background-color: #fff;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+
+        .tab {
+            padding: 15px 25px;
+            cursor: pointer;
+            border-bottom: 3px solid transparent;
+            transition: all 0.3s;
+        }
+
+        .tab.active {
+            border-bottom-color: #5ba3f5;
+            color: #5ba3f5;
+            font-weight: 600;
+        }
+
+        .tab-content {
+            flex: 1;
+            display: none;
+            padding: 30px;
+        }
+
+        .tab-content.active {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+
+        /* Styles de la section Upload */
+        .upload-section {
+            text-align: center;
+            max-width: 600px;
+            width: 100%;
+        }
+
+        .main-title {
+            font-size: 28px;
+            color: #333;
+            margin-bottom: 30px;
+            font-weight: 600;
+        }
+
+        .subtitle {
+            font-size: 16px;
+            color: #666;
+            margin-bottom: 40px;
+            font-weight: 400;
+        }
+
+        .upload-button {
+            background-color: #5ba3f5;
+            color: white;
+            border: none;
+            padding: 12px 32px;
+            border-radius: 6px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+            font-weight: 500;
+            margin-bottom: 20px;
+        }
+
+        .upload-button:hover {
+            background-color: #4a90e2;
+        }
+
+        .file-input {
+            display: none;
+        }
+
+        /* Styles du chatbot */
+        .chat-container {
+            width: 100%;
+            max-width: 600px;
+            height: 500px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            background: #fff;
+            display: flex;
+            flex-direction: column;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        .chat-header {
+            padding: 15px;
+            font-size: 1.2em;
+            font-weight: bold;
+            color: #333;
+            border-bottom: 1px solid #eee;
+            background-color: #f9f9f9;
+        }
+
+        .chat-body {
+            flex: 1;
+            padding: 15px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .msg {
+            max-width: 80%;
+            padding: 10px 15px;
+            border-radius: 18px;
+            font-size: 0.95em;
+            word-break: break-word;
+            line-height: 1.4;
+        }
+
+        .msg.user {
+            align-self: flex-end;
+            background: #e0e7ff;
+            color: #222;
+        }
+
+        .msg.bot {
+            align-self: flex-start;
+            background: #f1f1f1;
+            color: #444;
+        }
+
+        .chat-footer {
+            display: flex;
+            align-items: center;
+            padding: 10px 15px;
+            border-top: 1px solid #eee;
+            background: #fafafa;
+        }
+
+        .input-group {
+            display: flex;
+            align-items: center;
+            width: 100%;
+            background: #fff;
+            border-radius: 20px;
+            border: 1px solid #ddd;
+            padding: 0 12px;
+        }
+
+        .chat-input {
+            border: none;
+            outline: none;
+            flex: 1;
+            padding: 10px 8px;
+            font-size: 1em;
+            background: transparent;
+            color: #333;
+        }
+
+        .send-btn {
+            background: none;
+            border: none;
+            outline: none;
+            cursor: pointer;
+            margin-left: 8px;
+            padding: 6px;
+            color: #5ba3f5;
+            font-size: 1.2em;
+        }
+
+        .status-message {
+            margin-top: 20px;
+            padding: 10px;
+            border-radius: 5px;
+            background-color: #e8f5e8;
+            color: #2e7d32;
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    
+
+        <div >
+            <div class="upload-section">
+                <h1 class="main-title">Analysez vos documents PDF</h1>
+                <p class="subtitle">Téléchargez votre document PDF pour commencer à poser des questions</p>
+                
+                <button class="upload-button" onclick="document.getElementById('fileInput').click()">
+                    Sélectionner un fichier PDF
+                </button>
+                <input type="file" id="fileInput" class="file-input" accept=".pdf">
+                
+                <div class="status-message" id="uploadStatus"></div>
+            </div>
+        </div>
+
+        <div>
+            <div class="chat-container">
+                <div class="chat-header">Document Chatbot</div>
+                <div class="chat-body" id="chatBody"></div>
+                <div class="chat-footer">
+                    <div class="input-group">
+                        <input type="text" class="chat-input" id="chatInput" placeholder="Posez une question sur le document..." autocomplete="off">
+                        <button class="send-btn" id="sendBtn">
+                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <path d="M22 2L11 13" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                                <path d="M22 2L15 22L11 13L2 9L22 2Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Gestion des onglets
+        function switchTab(tabId) {
+            document.querySelectorAll('.tab').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            document.querySelectorAll('.tab-content').forEach(content => {
+                content.classList.remove('active');
+            });
+            
+            document.querySelector(`.tab[onclick="switchTab('${tabId}')"]`).classList.add('active');
+            document.getElementById(tabId).classList.add('active');
+        }
+
+        // Upload de fichier
+        const fileInput = document.getElementById('fileInput');
+        const uploadStatus = document.getElementById('uploadStatus');
+        
+        fileInput.addEventListener('change', async (e) => {
+            if (e.target.files.length > 0) {
+                const file = e.target.files[0];
+                
+                if (file.type !== 'application/pdf') {
+                    showStatus('Veuillez sélectionner un fichier PDF', 'error');
+                    return;
+                }
+                
+                showStatus('Téléchargement du fichier...', 'uploading');
+                
+                try {
+                    // Simuler un upload (remplacer par un vrai appel API)
+                    await simulateUpload(file);
+                    
+                    showStatus('Document téléchargé avec succès! Passez à l\'onglet Chat pour poser des questions.', 'success');
+                    
+                    // Activer l'onglet Chat après 2 secondes
+                    setTimeout(() => {
+                        switchTab('chat');
+                        addMessage("J'ai analysé votre document. Posez-moi des questions à son sujet!", 'bot');
+                    }, 2000);
+                    
+                } catch (error) {
+                    showStatus('Erreur lors du téléchargement: ' + error.message, 'error');
+                }
+            }
+        });
+
+        function showStatus(message, type) {
+            uploadStatus.textContent = message;
+            uploadStatus.style.display = 'block';
+            uploadStatus.style.backgroundColor = type === 'error' ? '#ffebee' : '#e8f5e8';
+            uploadStatus.style.color = type === 'error' ? '#c62828' : '#2e7d32';
+        }
+
+        function simulateUpload(file) {
+            return new Promise((resolve, reject) => {
+                setTimeout(() => {
+                    // Simuler un succès ou une erreur aléatoire pour la démo
+                    const success = Math.random() > 0.2;
+                    if (success) {
+                        resolve();
+                    } else {
+                        reject(new Error('Échec de la connexion au serveur'));
+                    }
+                }, 1500);
+            });
+        }
+
+        // Chatbot functionality
+        const chatBody = document.getElementById('chatBody');
+        const chatInput = document.getElementById('chatInput');
+        const sendBtn = document.getElementById('sendBtn');
+
+        function addMessage(content, sender = 'user') {
+            const msg = document.createElement('div');
+            msg.className = 'msg ' + sender;
+            msg.textContent = content;
+            chatBody.appendChild(msg);
+            chatBody.scrollTop = chatBody.scrollHeight;
+        }
+
+        function botReply(userText) {
+            // En production, vous enverriez cette requête à votre backend
+            // qui analyserait le PDF et répondrait en conséquence
+            
+            let reply = "Je suis un chatbot spécialisé dans l'analyse de documents. ";
+            
+            if (userText.toLowerCase().includes('bonjour') || userText.toLowerCase().includes('salut')) {
+                reply = "Bonjour ! Posez-moi des questions sur le document que vous avez téléchargé.";
+            } else if (userText.toLowerCase().includes('merci')) {
+                reply = "Je vous en prie ! N'hésitez pas si vous avez d'autres questions.";
+            } else if (userText.toLowerCase().includes('résumé') || userText.toLowerCase().includes('résume')) {
+                reply = "D'après le document, voici un résumé des points clés: [Ceci est une simulation. En production, le chatbot analyserait vraiment le PDF.]";
+            } else {
+                reply = "Le document mentionne que: [Simulation de réponse basée sur le PDF. En production, le chatbot analyserait vraiment le contenu du document.]";
+            }
+            
+            setTimeout(() => addMessage(reply, 'bot'), 600);
+        }
+
+        function sendMessage() {
+            const value = chatInput.value.trim();
+            if (!value) return;
+            
+            addMessage(value, 'user');
+            chatInput.value = '';
+            botReply(value);
+        }
+
+        sendBtn.addEventListener('click', sendMessage);
+        chatInput.addEventListener('keydown', e => {
+            if (e.key === 'Enter') sendMessage();
+        });
+
+        // Message d'accueil initial
+        addMessage("Téléchargez d'abord un document PDF dans l'onglet Upload, puis vous pourrez me poser des questions dessus.", 'bot');
+    </script>
+</body>
+</html>
